@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom, fmt::Debug};
 
 #[derive(Debug)]
 pub enum DataType {
@@ -82,12 +82,32 @@ impl Data {
         }
     }
 
-    pub fn chunk(&mut self) -> &mut Chunk {
+    pub fn chunk(&self) -> &Chunk {
+        assert_ne!(self.0.chunk, std::ptr::null_mut());
+        unsafe {
+            let chunk: *const spa_sys::spa_chunk = self.0.chunk;
+            &*(chunk as *const Chunk)
+        }
+    }
+
+    pub fn chunk_mut(&mut self) -> &mut Chunk {
         assert_ne!(self.0.chunk, std::ptr::null_mut());
         unsafe {
             let chunk: *mut spa_sys::spa_chunk = self.0.chunk;
             &mut *(chunk as *mut Chunk)
         }
+    }
+}
+
+impl Debug for Data {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Data")
+            .field("type", &self.type_())
+            .field("flags", &self.flags())
+            // FIXME: Add fd
+            .field("data", &self.0.data) // Only print the pointer here, as we don't want to print a (potentially very big) slice.
+            .field("chunk", &self.chunk())
+            .finish()
     }
 }
 
@@ -106,12 +126,24 @@ impl Chunk {
         &self.0
     }
 
+    pub fn size(&self) -> u32 {
+        self.0.size
+    }
+
     pub fn size_mut(&mut self) -> &mut u32 {
         &mut self.0.size
     }
 
+    pub fn offset(&self) -> u32 {
+        self.0.offset
+    }
+
     pub fn offset_mut(&mut self) -> &mut u32 {
         &mut self.0.offset
+    }
+
+    pub fn stride(&self) -> i32 {
+        self.0.stride
     }
 
     pub fn stride_mut(&mut self) -> &mut i32 {
@@ -120,5 +152,16 @@ impl Chunk {
 
     pub fn flags(&self) -> ChunkFlags {
         ChunkFlags::from_bits_truncate(self.0.flags)
+    }
+}
+
+impl Debug for Chunk {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Chunk")
+            .field("offset", &self.offset())
+            .field("size", &self.size())
+            .field("stride", &self.stride())
+            .field("flags", &self.flags())
+            .finish()
     }
 }
