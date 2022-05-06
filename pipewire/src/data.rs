@@ -38,6 +38,18 @@ impl DataType {
     }
 }
 
+bitflags::bitflags! {
+    pub struct DataFlags: u32 {
+        /// Data is readable
+        const READABLE = 1<<0;
+        /// Data is writable
+        const WRITABLE = 1<<1;
+        /// Data pointer can be changed
+        const DYNAMIC = 1<<2;
+        const READWRITE = Self::READABLE.bits | Self::WRITABLE.bits;
+    }
+}
+
 #[repr(transparent)]
 pub struct Data(spa_sys::spa_data);
 #[repr(transparent)]
@@ -47,6 +59,12 @@ impl Data {
     pub fn type_(&self) -> DataType {
         DataType::from_raw(self.0.type_)
     }
+
+    pub fn flags(&self) -> DataFlags {
+        DataFlags::from_bits_truncate(self.0.flags)
+    }
+
+    // FIXME: Add bindings for the fd field, but how to detect when it is not set / invalid?
 
     pub fn data(&mut self) -> Option<&mut [u8]> {
         // FIXME: For safety, perhaps only return a non-mut slice when DataFlags::WRITABLE is not set?
