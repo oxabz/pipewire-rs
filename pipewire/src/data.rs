@@ -6,12 +6,16 @@ pub struct Data(spa_sys::spa_data);
 pub struct Chunk(spa_sys::spa_chunk);
 
 impl Data {
-    pub fn get_mut(&mut self) -> &mut [u8] {
-        unsafe {
-            std::slice::from_raw_parts_mut(
-                self.0.data as *mut u8,
-                usize::try_from(self.0.maxsize).unwrap(),
-            )
+    pub fn data(&mut self) -> Option<&mut [u8]> {
+        if self.0.data.is_null() {
+            None
+        } else {
+            unsafe {
+                Some(std::slice::from_raw_parts_mut(
+                    self.0.data as *mut u8,
+                    usize::try_from(self.0.maxsize).unwrap(),
+                ))
+            }
         }
     }
 
