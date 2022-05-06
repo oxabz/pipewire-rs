@@ -10,10 +10,6 @@ pub struct Buffer<'s, D> {
     /// In Pipewire, buffers are owned by the stream that generated them.
     /// This reference ensures that this rule is respected.
     stream: &'s Stream<D>,
-
-    /// An empty array of `Data`, that can be used to return an empty slice
-    /// when a buffer has no data.
-    empty_data: [Data; 0],
 }
 
 impl<D> Buffer<'_, D> {
@@ -21,11 +17,7 @@ impl<D> Buffer<'_, D> {
         buf: *mut pw_sys::pw_buffer,
         stream: &Stream<D>,
     ) -> Option<Buffer<'_, D>> {
-        NonNull::new(buf).map(|buf| Buffer {
-            buf,
-            stream,
-            empty_data: [],
-        })
+        NonNull::new(buf).map(|buf| Buffer { buf, stream })
     }
 
     pub fn datas_mut(&mut self) -> &mut [Data] {
@@ -39,7 +31,7 @@ impl<D> Buffer<'_, D> {
                 std::slice::from_raw_parts_mut(datas, usize::try_from((*buffer).n_datas).unwrap())
             }
         } else {
-            &mut self.empty_data
+            &mut []
         };
 
         slice_of_data
