@@ -52,8 +52,6 @@ bitflags::bitflags! {
 
 #[repr(transparent)]
 pub struct Data(spa_sys::spa_data);
-#[repr(transparent)]
-pub struct Chunk(spa_sys::spa_chunk);
 
 impl Data {
     pub fn type_(&self) -> DataType {
@@ -89,14 +87,30 @@ impl Data {
     }
 }
 
+bitflags::bitflags! {
+    pub struct ChunkFlags: i32 {
+        /// Chunk data is corrupted in some way
+        const CORRUPTED = 1<<0;
+    }
+}
+
+#[repr(transparent)]
+pub struct Chunk(spa_sys::spa_chunk);
+
 impl Chunk {
     pub fn size_mut(&mut self) -> &mut u32 {
         &mut self.0.size
     }
+
     pub fn offset_mut(&mut self) -> &mut u32 {
         &mut self.0.offset
     }
+
     pub fn stride_mut(&mut self) -> &mut i32 {
         &mut self.0.stride
+    }
+
+    pub fn flags(&self) -> ChunkFlags {
+        ChunkFlags::from_bits_truncate(self.0.flags)
     }
 }
