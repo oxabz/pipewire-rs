@@ -54,6 +54,10 @@ bitflags::bitflags! {
 pub struct Data(spa_sys::spa_data);
 
 impl Data {
+    pub fn as_raw(&self) -> &spa_sys::spa_data {
+        &self.0
+    }
+
     pub fn type_(&self) -> DataType {
         DataType::from_raw(self.0.type_)
     }
@@ -98,6 +102,10 @@ bitflags::bitflags! {
 pub struct Chunk(spa_sys::spa_chunk);
 
 impl Chunk {
+    pub fn as_raw(&self) -> &spa_sys::spa_chunk {
+        &self.0
+    }
+
     pub fn size_mut(&mut self) -> &mut u32 {
         &mut self.0.size
     }
