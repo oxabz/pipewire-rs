@@ -1,12 +1,55 @@
 use std::convert::TryFrom;
 
+#[derive(Debug)]
+pub enum DataType {
+    Invalid,
+    /// Pointer to memory, the data field in struct [`Data`] is set.
+    MemPtr,
+    /// Generic fd, `mmap` to get to memory
+    MemFd,
+    /// Fd to `dmabuf` memory
+    DmaBuf,
+    /// Memory is identified with an id
+    MemId,
+    Other(u32),
+}
+
+impl DataType {
+    pub fn from_raw(raw: u32) -> DataType {
+        match raw {
+            spa_sys::SPA_DATA_Invalid => Self::Invalid,
+            spa_sys::SPA_DATA_MemPtr => Self::MemPtr,
+            spa_sys::SPA_DATA_MemFd => Self::MemFd,
+            spa_sys::SPA_DATA_DmaBuf => Self::DmaBuf,
+            spa_sys::SPA_DATA_MemId => Self::MemId,
+            other => Self::Other(other),
+        }
+    }
+
+    pub fn as_raw(&self) -> u32 {
+        match self {
+            Self::Invalid => spa_sys::SPA_DATA_Invalid,
+            Self::MemPtr => spa_sys::SPA_DATA_MemPtr,
+            Self::MemFd => spa_sys::SPA_DATA_MemFd,
+            Self::DmaBuf => spa_sys::SPA_DATA_DmaBuf,
+            Self::MemId => spa_sys::SPA_DATA_MemId,
+            Self::Other(other) => *other,
+        }
+    }
+}
+
 #[repr(transparent)]
 pub struct Data(spa_sys::spa_data);
 #[repr(transparent)]
 pub struct Chunk(spa_sys::spa_chunk);
 
 impl Data {
+    pub fn type_(&self) -> DataType {
+        DataType::from_raw(self.0.type_)
+    }
+
     pub fn data(&mut self) -> Option<&mut [u8]> {
+        // FIXME: For safety, perhaps only return a non-mut slice when DataFlags::WRITABLE is not set?
         if self.0.data.is_null() {
             None
         } else {
