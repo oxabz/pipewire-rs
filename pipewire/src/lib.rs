@@ -125,7 +125,6 @@ pub mod channel;
 pub mod constants;
 mod context;
 mod core_;
-pub mod data;
 mod error;
 pub mod keys;
 pub mod link;

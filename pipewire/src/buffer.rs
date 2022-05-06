@@ -1,6 +1,6 @@
 use super::stream::Stream;
 
-use crate::data::Data;
+use spa::data::Data;
 use std::convert::TryFrom;
 use std::ptr::NonNull;
 
