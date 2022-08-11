@@ -30,3 +30,6 @@ cc = "1.0.66"
 
 [package.metadata.system-deps]
 libspa = { name = "libspa-0.2", version = "0.2" }
+
+[features]
+v0_3_33 = []

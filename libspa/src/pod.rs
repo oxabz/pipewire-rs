@@ -723,7 +723,12 @@ bitflags! {
         const READONLY = spa_sys::SPA_POD_PROP_FLAG_READONLY;
         /// Property is some sort of hardware parameter.
         const HARDWARE = spa_sys::SPA_POD_PROP_FLAG_HARDWARE;
-        /// Property contains a dictionnary struct.
+        /// Property contains a dictionary struct.
         const HINT_DICT = spa_sys::SPA_POD_PROP_FLAG_HINT_DICT;
+        /// Property is mandatory.
+        const MANDATORY = spa_sys::SPA_POD_PROP_FLAG_MANDATORY;
+        /// Property choices need no fixation.
+        #[cfg(feature = "v0_3_33")]
+        const DONT_FIXATE = spa_sys::SPA_POD_PROP_FLAG_DONT_FIXATE;
     }
 }
