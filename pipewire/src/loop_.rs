@@ -1,13 +1,20 @@
 // Copyright The pipewire-rs Contributors.
 // SPDX-License-Identifier: MIT
 
-use std::{convert::TryInto, ops::Deref, os::unix::prelude::*, ptr, time::Duration};
+use std::{
+    convert::TryInto,
+    ops::Deref,
+    os::unix::prelude::*,
+    ptr::{self, NonNull},
+    rc::{Rc, Weak},
+    time::Duration,
+};
 
 use libc::{c_int, c_void};
 use signal::Signal;
 use spa::{flags::IoFlags, result::SpaResult, spa_interface_call_method};
 
-use crate::utils::assert_main_thread;
+use crate::{utils::assert_main_thread, Error};
 
 /// A transparent wrapper around a raw [`pw_loop`](`pw_sys::pw_loop`).
 /// It is usually only seen in a reference (`&LoopRef`).
@@ -362,43 +369,23 @@ impl LoopRef {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Loop {
-    ptr: *mut pw_sys::pw_loop,
+    inner: Rc<LoopInner>,
 }
 
 impl Loop {
-    /// Create a new loop from a raw [`pw_loop`](`pw_sys::pw_loop`), taking ownership of it.
-    ///
-    /// # Safety
-    /// The provided pointer must point to a valid, well aligned [`pw_loop`](`pw_sys::pw_loop`).
-    ///
-    /// The raw loop should not be manually destroyed or moved, as the new [`Loop`] takes ownership of it.
-    pub unsafe fn from_raw(ptr: *mut pw_sys::pw_loop) -> Self {
-        Loop { ptr }
-    }
-
     /// Create a new [`Loop`].
-    pub fn new() -> Self {
-        // This is a potential "entry point" to the library, so we need to ensure it is initialized.
-        crate::init();
-
-        unsafe { Self::from_raw(pw_sys::pw_loop_new(std::ptr::null())) }
+    pub fn new() -> Result<Self, Error> {
+        LoopInner::new().map(|inner| Self {
+            inner: Rc::new(inner),
+        })
     }
 
     // TODO: fn with_props
-
-    /// Consume the [`Loop`] and returns the underlying raw [`pw_loop`](`pw_sys::pw_loop`).
-    ///
-    /// After calling this function, the caller has ownership of the raw [`pw_loop`](`pw_sys::pw_loop`),
-    /// and should ensure it is properly destroyed when not used any longer.
-    pub fn into_raw(self) -> *mut pw_sys::pw_loop {
-        std::mem::ManuallyDrop::new(self).ptr
-    }
-}
-
-impl IsLoop for Loop {
-    fn as_loop(&self) -> &LoopRef {
-        self.as_ref()
+    pub fn downgrade(&self) -> WeakLoop {
+        let weak = Rc::downgrade(&self.inner);
+        WeakLoop { weak }
     }
 }
 
@@ -409,24 +396,70 @@ impl std::convert::AsRef<LoopRef> for Loop {
 }
 
 impl std::ops::Deref for Loop {
+    type Target = LoopInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+pub struct WeakLoop {
+    weak: Weak<LoopInner>,
+}
+
+impl WeakLoop {
+    pub fn upgrade(&self) -> Option<Loop> {
+        self.weak.upgrade().map(|inner| Loop { inner })
+    }
+}
+
+#[derive(Debug)]
+pub struct LoopInner {
+    ptr: ptr::NonNull<pw_sys::pw_loop>,
+}
+
+impl LoopInner {
+    /// Create a new loop from a raw [`pw_loop`](`pw_sys::pw_loop`), taking ownership of it.
+    ///
+    /// # Safety
+    /// The provided pointer must point to a valid, well aligned [`pw_loop`](`pw_sys::pw_loop`).
+    ///
+    /// The raw loop should not be manually destroyed or moved, as the new [`LoopInner`] takes ownership of it.
+    pub unsafe fn from_raw(ptr: NonNull<pw_sys::pw_loop>) -> Self {
+        LoopInner { ptr }
+    }
+
+    /// Create a new [`LoopInner`].
+    pub fn new() -> Result<Self, Error> {
+        // This is a potential "entry point" to the library, so we need to ensure it is initialized.
+        crate::init();
+
+        unsafe {
+            let l = pw_sys::pw_loop_new(std::ptr::null());
+            let ptr = ptr::NonNull::new(l).ok_or(Error::CreationFailed)?;
+            Ok(Self::from_raw(ptr))
+        }
+    }
+}
+
+impl std::convert::AsRef<LoopRef> for LoopInner {
+    fn as_ref(&self) -> &LoopRef {
+        self.deref()
+    }
+}
+
+impl std::ops::Deref for LoopInner {
     type Target = LoopRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { &*(self.ptr as *mut LoopRef) }
+        unsafe { &*(self.ptr.as_ptr() as *mut LoopRef) }
     }
 }
 
-impl std::ops::Drop for Loop {
+impl Drop for LoopInner {
     fn drop(&mut self) {
-        unsafe { pw_sys::pw_loop_destroy(self.ptr) }
+        unsafe { pw_sys::pw_loop_destroy(self.ptr.as_ptr()) }
     }
-}
-
-/// A trait that allows conversion of any kind of pipewire loop to its underlying `pw_loop`.
-///
-/// Different kinds of events, such as receiving a signal (e.g. SIGTERM) can be attached to that underlying loop.
-pub trait IsLoop {
-    fn as_loop(&self) -> &LoopRef;
 }
 
 pub trait IsSource {

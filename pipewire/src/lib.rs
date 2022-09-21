@@ -77,14 +77,13 @@
 //! For example, we can call a function on an interval:
 //!
 //! ```no_run
-//! // We also need to include the `IsLoop` trait for this.
-//! use pipewire::{MainLoop, IsLoop};
+//! use pipewire::MainLoop;
 //! use std::time::Duration;
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let mainloop = MainLoop::new()?;
 //!
-//!     let timer = mainloop.as_loop().add_timer(|_| println!("Hello"));
+//!     let timer = mainloop.add_timer(|_| println!("Hello"));
 //!     // Call the first time in half a second, and then in a one second interval.
 //!     timer.update_timer(Some(Duration::from_millis(500)), Some(Duration::from_secs(1))).into_result()?;
 //!
@@ -145,7 +144,6 @@ mod utils;
 pub mod prelude {
     pub use spa::prelude::*;
 
-    pub use crate::loop_::IsLoop;
     pub use crate::stream::ListenerBuilderT;
 }
 

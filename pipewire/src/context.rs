@@ -5,22 +5,22 @@ use std::{os::unix::prelude::RawFd, ptr};
 
 use crate::core_::Core;
 use crate::error::Error;
-use crate::loop_::IsLoop;
+use crate::loop_::LoopRef;
 use crate::properties::Properties;
 
 #[derive(Debug)]
-pub struct Context<T: IsLoop + Clone> {
+pub struct Context<T: AsRef<LoopRef> + Clone> {
     ptr: ptr::NonNull<pw_sys::pw_context>,
     /// Store the loop here, so that the loop is not dropped before the context, which may lead to
     /// undefined behaviour.
     _loop: T,
 }
 
-impl<T: IsLoop + Clone> Context<T> {
+impl<T: AsRef<LoopRef> + Clone> Context<T> {
     fn new_internal(loop_: &T, properties: Option<Properties>) -> Result<Self, Error> {
         let props = properties.map_or(ptr::null(), |props| props.into_raw()) as *mut _;
         let context = unsafe {
-            pw_sys::pw_context_new(loop_.as_loop().as_raw() as *const _ as *mut _, props, 0)
+            pw_sys::pw_context_new(loop_.as_ref().as_raw() as *const _ as *mut _, props, 0)
         };
         let context = ptr::NonNull::new(context).ok_or(Error::CreationFailed)?;
 
@@ -65,7 +65,7 @@ impl<T: IsLoop + Clone> Context<T> {
     }
 }
 
-impl<T: IsLoop + Clone> Drop for Context<T> {
+impl<T: AsRef<LoopRef> + Clone> Drop for Context<T> {
     fn drop(&mut self) {
         unsafe { pw_sys::pw_context_destroy(self.as_ptr()) }
     }

@@ -13,7 +13,7 @@
 // ignored because https://gitlab.freedesktop.org/pipewire/pipewire-rs/-/issues/19
 //! ```no_run
 //! use std::{time::Duration, sync::mpsc, thread};
-//! use pipewire::{MainLoop, IsLoop};
+//! use pipewire::MainLoop;
 //!
 //! // Our message to the pipewire loop, this tells it to terminate.
 //! struct Terminate;
@@ -51,7 +51,7 @@
 //!     });
 //!
 //!     // Every 100ms, send `"Hello"` to the main thread.
-//!     let timer = mainloop.as_loop().add_timer(move |_| {
+//!     let timer = mainloop.add_timer(move |_| {
 //!         main_sender.send(String::from("Hello"));
 //!     });
 //!     timer.update_timer(
@@ -70,7 +70,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::{IoSource, IsLoop};
+use crate::{IoSource, LoopRef};
 use spa::flags::IoFlags;
 
 /// A receiver that has not been attached to a loop.
@@ -85,17 +85,16 @@ impl<T: 'static> Receiver<T> {
     ///
     /// This will make the loop call the callback with any messages that get sent to the receiver.
     #[must_use]
-    pub fn attach<F, L>(self, loop_: &L, callback: F) -> AttachedReceiver<T>
+    pub fn attach<F>(self, loop_: &LoopRef, callback: F) -> AttachedReceiver<T>
     where
         F: Fn(T) + 'static,
-        L: IsLoop,
     {
         let channel = self.channel.clone();
         let eventfd = channel.lock().expect("Channel mutex lock poisoned").eventfd;
 
         // Attach the eventfd as an IO source to the loop.
         // Whenever the eventfd is signaled, call the users callback with each message in the queue.
-        let iosource = loop_.as_loop().add_io(eventfd, IoFlags::IN, move |_| {
+        let iosource = loop_.add_io(eventfd, IoFlags::IN, move |_| {
             let mut channel = channel.lock().expect("Channel mutex lock poisoned");
 
             // Read from the eventfd to make it block until written to again.

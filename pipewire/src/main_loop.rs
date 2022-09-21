@@ -5,7 +5,7 @@ use std::ops::Deref;
 use std::ptr;
 use std::rc::{Rc, Weak};
 
-use crate::loop_::{self, IsLoop};
+use crate::LoopRef;
 use crate::{error::Error, Properties};
 use spa::ReadableDict;
 
@@ -37,20 +37,17 @@ impl MainLoop {
     }
 }
 
+impl std::convert::AsRef<LoopRef> for MainLoop {
+    fn as_ref(&self) -> &LoopRef {
+        self.deref()
+    }
+}
+
 impl Deref for MainLoop {
     type Target = MainLoopInner;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
-    }
-}
-
-impl IsLoop for MainLoop {
-    fn as_loop(&self) -> &loop_::LoopRef {
-        unsafe {
-            &*(pw_sys::pw_main_loop_get_loop(self.inner.as_ptr()) as *mut loop_::LoopRef
-                as *const _)
-        }
     }
 }
 
@@ -94,6 +91,20 @@ impl MainLoopInner {
         unsafe {
             pw_sys::pw_main_loop_quit(self.as_ptr());
         }
+    }
+}
+
+impl std::convert::AsRef<LoopRef> for MainLoopInner {
+    fn as_ref(&self) -> &LoopRef {
+        self.deref()
+    }
+}
+
+impl std::ops::Deref for MainLoopInner {
+    type Target = LoopRef;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*(self.ptr.as_ptr() as *mut LoopRef) }
     }
 }
 
