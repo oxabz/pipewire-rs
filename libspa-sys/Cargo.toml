@@ -16,9 +16,12 @@ keywords = ["ffi", "pipewire", "multimedia", "audio", "video"]
 [dependencies]
 
 [build-dependencies]
-bindgen = {version = "0.59", default-features = false}
+bindgen = { version = "0.59", default-features = false }
 system-deps = "6"
 
 [package.metadata.system-deps]
- libspa = { name = "libspa-0.2", version = "0.2" }
- libpipewire = { name = "libpipewire-0.3", version = "0.3" }
+libspa = { name = "libspa-0.2", version = "0.2" }
+libpipewire = { name = "libpipewire-0.3", version = "0.3" }
+
+[lib]
+doctest = false # https://github.com/rust-lang/rust-bindgen/issues/1313
