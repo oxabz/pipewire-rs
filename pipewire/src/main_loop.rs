@@ -104,7 +104,7 @@ impl std::ops::Deref for MainLoopInner {
     type Target = LoopRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { &*(self.ptr.as_ptr() as *mut LoopRef) }
+        unsafe { &*(pw_sys::pw_main_loop_get_loop(self.ptr.as_ptr()) as *mut LoopRef) }
     }
 }
 
