@@ -143,9 +143,11 @@ impl<D> Stream<D> {
         &mut self,
         user_data: D,
     ) -> ListenerLocalBuilder<'_, D> {
+        let mut callbacks = ListenerLocalCallbacks::with_user_data(user_data);
+        callbacks.stream = Some(self.ptr);
         ListenerLocalBuilder {
             stream: self,
-            callbacks: ListenerLocalCallbacks::with_user_data(user_data),
+            callbacks,
         }
     }
 
@@ -350,10 +352,7 @@ impl<D: Default> Stream<D> {
     /// Add a local listener builder
     #[must_use = "Fluent builder API"]
     pub fn add_local_listener(&mut self) -> ListenerLocalBuilder<'_, D> {
-        ListenerLocalBuilder {
-            stream: self,
-            callbacks: ListenerLocalCallbacks::with_user_data(Default::default()),
-        }
+        self.add_local_listener_with_user_data(Default::default())
     }
 }
 
