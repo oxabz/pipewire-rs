@@ -1150,7 +1150,7 @@ impl PodSerialize for NestedStruct {
     }
 }
 
-impl<'a, 'de> PodDeserialize<'de> for TestStruct<'de> {
+impl<'de> PodDeserialize<'de> for TestStruct<'de> {
     fn deserialize(
         deserializer: PodDeserializer<'de>,
     ) -> Result<(Self, DeserializeSuccess<'de>), DeserializeError<&'de [u8]>>
@@ -1185,7 +1185,7 @@ impl<'a, 'de> PodDeserialize<'de> for TestStruct<'de> {
     }
 }
 
-impl<'a, 'de> PodDeserialize<'de> for NestedStruct {
+impl<'de> PodDeserialize<'de> for NestedStruct {
     fn deserialize(
         deserializer: PodDeserializer<'de>,
     ) -> Result<(Self, DeserializeSuccess<'de>), DeserializeError<&'de [u8]>>
