@@ -103,7 +103,8 @@ rustdoc:
     RUSTDOCFLAGS: '-Dwarnings'
   script:
     - rustdoc --version
-    - cargo doc --no-deps
+    - cargo doc -p pipewire --no-deps
+    - cargo doc -p libspa --no-deps
 
 clippy:
   extends:
