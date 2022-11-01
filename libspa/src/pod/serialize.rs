@@ -470,11 +470,7 @@ impl<O: Write + Seek> PodSerializer<O> {
             self.gen(|out| v.serialize_body(out))?;
         }
 
-        let padding = if len % 8 == 0 {
-            0
-        } else {
-            8 - (len as usize % 8)
-        };
+        let padding = if len % 8 == 0 { 0 } else { 8 - (len % 8) };
 
         // Add padding to the pod.
         let pad_bytes = self.gen(PodSerializer::padding(padding))?;

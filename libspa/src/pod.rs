@@ -119,7 +119,7 @@ impl CanonicalFixedSizedPod for bool {
     const SIZE: u32 = 4;
 
     fn serialize_body<O: Write>(&self, out: O) -> Result<O, GenError> {
-        gen_simple(ne_u32(if *self { 1u32 } else { 0u32 }), out)
+        gen_simple(ne_u32(u32::from(*self)), out)
     }
 
     fn deserialize_body(input: &[u8]) -> IResult<&[u8], Self>

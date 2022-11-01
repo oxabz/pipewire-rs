@@ -53,6 +53,7 @@ impl Node {
 
 #[derive(Default)]
 struct ListenerLocalCallbacks {
+    #[allow(clippy::type_complexity)]
     info: Option<Box<dyn Fn(&NodeInfo)>>,
     #[allow(clippy::type_complexity)]
     param: Option<Box<dyn Fn(i32, u32, u32, u32)>>, // TODO: add params
@@ -168,9 +169,9 @@ pub struct NodeListener {
     data: Box<ListenerLocalCallbacks>,
 }
 
-impl<'a> Listener for NodeListener {}
+impl Listener for NodeListener {}
 
-impl<'a> Drop for NodeListener {
+impl Drop for NodeListener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }

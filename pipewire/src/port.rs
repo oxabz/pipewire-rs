@@ -53,6 +53,7 @@ impl Port {
 
 #[derive(Default)]
 struct ListenerLocalCallbacks {
+    #[allow(clippy::type_complexity)]
     info: Option<Box<dyn Fn(&PortInfo)>>,
     #[allow(clippy::type_complexity)]
     param: Option<Box<dyn Fn(i32, u32, u32, u32)>>, // TODO: add params
@@ -124,9 +125,9 @@ pub struct PortListener {
     data: Box<ListenerLocalCallbacks>,
 }
 
-impl<'a> Listener for PortListener {}
+impl Listener for PortListener {}
 
-impl<'a> Drop for PortListener {
+impl Drop for PortListener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }

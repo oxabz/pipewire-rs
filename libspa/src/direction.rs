@@ -4,7 +4,7 @@
 //! SPA direction.
 
 /// A port direction.
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Direction {
     /// Input
     Input,

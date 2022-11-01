@@ -142,15 +142,15 @@ pub trait ReadableDict {
 }
 
 /// An error raised by [`ReadableDict::parse`] if the value cannot be converted to the requested type.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct ParseValueError {
     value: String,
     type_name: &'static str,
 }
 
-impl<'a> std::error::Error for ParseValueError {}
+impl std::error::Error for ParseValueError {}
 
-impl<'a> fmt::Display for ParseValueError {
+impl fmt::Display for ParseValueError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "'{}' cannot be parsed to {}", self.value, self.type_name)
     }

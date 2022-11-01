@@ -118,9 +118,9 @@ pub struct ProxyListener {
     data: Box<ListenerLocalCallbacks>,
 }
 
-impl<'a> Listener for ProxyListener {}
+impl Listener for ProxyListener {}
 
-impl<'a> Drop for ProxyListener {
+impl Drop for ProxyListener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }

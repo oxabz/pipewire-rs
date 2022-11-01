@@ -8,15 +8,15 @@ pub use spa_sys::spa_rectangle as Rectangle;
 use crate::pod::CanonicalFixedSizedPod;
 
 /// An enumerated value in a pod
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Id(pub u32);
 
 /// A file descriptor in a pod
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Fd(pub i64);
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 /// the flags and choice of a choice pod.
 pub struct Choice<T: CanonicalFixedSizedPod>(pub ChoiceFlags, pub ChoiceEnum<T>);
 
@@ -29,7 +29,7 @@ bitflags! {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 /// a choice in a pod.
 pub enum ChoiceEnum<T: CanonicalFixedSizedPod> {
     /// no choice.

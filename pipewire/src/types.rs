@@ -3,7 +3,7 @@ use std::fmt;
 // Macro generating the ObjectType enum
 macro_rules! object_type {
     ($( ($x:ident, $version:ident) ),*) => {
-        #[derive(Debug, PartialEq, Clone)]
+        #[derive(Debug, Eq, PartialEq, Clone)]
         pub enum ObjectType {
             $($x,)*
             Other(String),

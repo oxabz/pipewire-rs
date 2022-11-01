@@ -59,9 +59,9 @@ pub struct LinkListener {
     data: Box<ListenerLocalCallbacks>,
 }
 
-impl<'a> Listener for LinkListener {}
+impl Listener for LinkListener {}
 
-impl<'a> Drop for LinkListener {
+impl Drop for LinkListener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }
@@ -69,6 +69,7 @@ impl<'a> Drop for LinkListener {
 
 #[derive(Default)]
 struct ListenerLocalCallbacks {
+    #[allow(clippy::type_complexity)]
     info: Option<Box<dyn Fn(&LinkInfo)>>,
 }
 

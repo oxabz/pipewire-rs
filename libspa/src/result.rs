@@ -9,17 +9,17 @@ use errno::Errno;
 
 /// A result returned by a SPA method, usually to be converted to
 /// a Rust result using [`SpaResult::into_result`] or [`SpaResult::into_async_result`].
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct SpaResult(i32);
 
 /// An asynchronous sequence number returned by a SPA component.
 ///
 /// Use [`AsyncSeq::seq`] to retrive the actual sequence number.
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub struct AsyncSeq(i32);
 
 /// A successful result from a SPA method.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum SpaSuccess {
     /// Synchronous success
     Sync(i32),
@@ -34,7 +34,7 @@ fn async_seq(res: i32) -> i32 {
 
 fn is_async(val: i32) -> bool {
     let bit: i32 = spa_sys::SPA_ASYNC_BIT.try_into().unwrap();
-    (val & spa_sys::SPA_ASYNC_MASK as i32) == bit
+    (val & spa_sys::SPA_ASYNC_MASK) == bit
 }
 
 impl AsyncSeq {
@@ -126,7 +126,7 @@ impl SpaResult {
 }
 
 /// Error returned from a SPA method.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Error(Errno);
 
 impl Error {

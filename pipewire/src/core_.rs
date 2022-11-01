@@ -195,6 +195,7 @@ impl CoreInner {
 
 #[derive(Default)]
 struct ListenerLocalCallbacks {
+    #[allow(clippy::type_complexity)]
     info: Option<Box<dyn Fn(&Info)>>,
     done: Option<Box<dyn Fn(u32, AsyncSeq)>>,
     #[allow(clippy::type_complexity)]
@@ -222,7 +223,7 @@ impl Listener {
     }
 }
 
-impl<'a> Drop for Listener {
+impl Drop for Listener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }

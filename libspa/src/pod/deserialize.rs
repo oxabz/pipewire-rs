@@ -225,7 +225,7 @@ pub struct PodDeserializer<'de> {
     input: &'de [u8],
 }
 
-impl<'de, 'a> PodDeserializer<'de> {
+impl<'de> PodDeserializer<'de> {
     /// Deserialize a [`PodDeserialize`] implementor from a raw pod.
     ///
     /// Deserialization will only succeed if the raw pod matches the kind of pod expected by the [`PodDeserialize`]

@@ -88,9 +88,9 @@ pub struct MetadataListener {
     data: Box<ListenerLocalCallbacks>,
 }
 
-impl<'meta> Listener for MetadataListener {}
+impl Listener for MetadataListener {}
 
-impl<'meta> Drop for MetadataListener {
+impl Drop for MetadataListener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }

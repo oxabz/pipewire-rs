@@ -88,6 +88,7 @@ impl Drop for Registry {
 
 #[derive(Default)]
 struct ListenerLocalCallbacks {
+    #[allow(clippy::type_complexity)]
     global: Option<Box<dyn Fn(&GlobalObject<ForeignDict>)>>,
     global_remove: Option<Box<dyn Fn(u32)>>,
 }
@@ -106,7 +107,7 @@ pub struct Listener {
     data: Box<ListenerLocalCallbacks>,
 }
 
-impl<'a> Drop for Listener {
+impl Drop for Listener {
     fn drop(&mut self) {
         spa::hook::remove(*self.listener);
     }
