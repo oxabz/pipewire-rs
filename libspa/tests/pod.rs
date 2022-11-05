@@ -729,7 +729,7 @@ fn array_i32() {
 fn array_bool() {
     let array = vec![false, true];
     // encode the bools on 4 bytes
-    let array_u32: Vec<u32> = array.iter().map(|b| if *b { 1 } else { 0 }).collect();
+    let array_u32: Vec<u32> = array.iter().map(u32::from).collect();
 
     let vec_rs: Vec<u8> = PodSerializer::serialize(Cursor::new(Vec::new()), array.as_slice())
         .unwrap()
