@@ -3,7 +3,6 @@
 
 use anyhow::Result;
 use pipewire as pw;
-use signal::Signal;
 use std::{cell::RefCell, collections::HashMap};
 use std::{rc::Rc, sync::Arc};
 use structopt::StructOpt;
@@ -15,6 +14,7 @@ use pw::port::Port;
 use pw::properties;
 use pw::proxy::{Listener, ProxyListener, ProxyT};
 use pw::types::ObjectType;
+use pw::Signal;
 
 struct Proxies {
     proxies_t: HashMap<u32, Box<dyn ProxyT>>,
