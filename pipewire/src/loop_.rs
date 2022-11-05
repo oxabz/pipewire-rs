@@ -11,9 +11,8 @@ use std::{
 };
 
 use libc::{c_int, c_void};
+use signal::Signal;
 use spa::{flags::IoFlags, result::SpaResult, spa_interface_call_method};
-
-pub use nix::sys::signal::Signal;
 
 use crate::{utils::assert_main_thread, Error};
 
