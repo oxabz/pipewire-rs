@@ -9,6 +9,11 @@ fn main() {
         .probe()
         .expect("Cannot find libraries");
 
+    run_bindgen(&libs);
+    compile_reexported_symbols(&libs);
+}
+
+fn run_bindgen(libs: &system_deps::Dependencies) {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
 
@@ -43,4 +48,17 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+}
+
+fn compile_reexported_symbols(libs: &system_deps::Dependencies) {
+    const FILES: &[&str] = &["src/type-info.c"];
+
+    for file in FILES {
+        println!("cargo:rerun-if-changed={file}");
+    }
+
+    cc::Build::new()
+        .files(FILES)
+        .includes(libs.all_include_paths())
+        .compile("libspa-rs-reexports")
 }
