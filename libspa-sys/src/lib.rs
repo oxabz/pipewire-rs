@@ -21,3 +21,9 @@ pub use bindings::*;
 // Also, wrappers around macros are also present here.
 mod type_info;
 pub use type_info::*;
+mod param;
+pub use param::*;
+mod param_audio;
+pub use param_audio::*;
+mod param_video;
+pub use param_video::*;

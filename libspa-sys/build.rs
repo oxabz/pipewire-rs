@@ -50,7 +50,12 @@ fn run_bindgen(libs: &system_deps::Dependencies) {
 }
 
 fn compile_reexported_symbols(libs: &system_deps::Dependencies) {
-    const FILES: &[&str] = &["src/type-info.c"];
+    const FILES: &[&str] = &[
+        "src/type-info.c",
+        "src/param.c",
+        "src/param_audio.c",
+        "src/param_video.c",
+    ];
 
     for file in FILES {
         println!("cargo:rerun-if-changed={file}");
