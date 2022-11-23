@@ -27,7 +27,6 @@ fn run_bindgen(libs: &system_deps::Dependencies) {
         .size_t_is_usize(true)
         .allowlist_function("spa_.*")
         .allowlist_type("spa_.*")
-        .allowlist_var("spa_.*")
         .allowlist_var("SPA_.*")
         .prepend_enum_name(false)
         .derive_eq(true);
