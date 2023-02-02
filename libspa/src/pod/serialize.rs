@@ -477,7 +477,8 @@ impl<O: Write + Seek> PodSerializer<O> {
 
         Ok(SerializeSuccess {
             serializer: self,
-            len: len as u64 + pad_bytes,
+            // pod header + choice body + padding
+            len: 8 + len as u64 + pad_bytes,
         })
     }
 
@@ -715,7 +716,8 @@ impl<O: Write + Seek> ObjectPodSerializer<O> {
         // Return full length of written pod.
         Ok(SerializeSuccess {
             serializer,
-            len: written as u64,
+            // pod header + object body
+            len: 8 + written as u64,
         })
     }
 }

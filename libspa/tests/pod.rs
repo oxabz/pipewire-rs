@@ -2146,3 +2146,72 @@ fn pointer() {
         ))
     );
 }
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn composite_values() {
+    let all_type_values = [
+        Value::None,
+        Value::Bool(false),
+        Value::Id(Id(0)),
+        Value::Int(0),
+        Value::Long(0),
+        Value::Float(0.0),
+        Value::Double(0.0),
+        Value::String(String::new()),
+        Value::Bytes(vec![]),
+        Value::Rectangle(Rectangle {
+            width: 1,
+            height: 1,
+        }),
+        Value::Fraction(Fraction { num: 0, denom: 1 }),
+        Value::Fd(Fd(-1)),
+        Value::ValueArray(ValueArray::None(vec![])),
+        Value::Struct(vec![]),
+        Value::Object(Object {
+            type_: 0,
+            id: 0,
+            properties: vec![],
+        }),
+        Value::Choice(ChoiceValue::Int(Choice(
+            ChoiceFlags::empty(),
+            ChoiceEnum::None(0),
+        ))),
+        Value::Pointer(0, ptr::null_mut()),
+    ];
+
+    for value in &all_type_values {
+        let (cursor, len) = PodSerializer::serialize(Cursor::new(Vec::new()), value).unwrap();
+        let vec_rs_val = cursor.into_inner();
+        assert_eq!(len, vec_rs_val.len() as u64);
+    }
+
+    let struct_val = Value::Struct(all_type_values.to_vec());
+    let (cursor, len) = PodSerializer::serialize(Cursor::new(Vec::new()), &struct_val).unwrap();
+    let vec_rs_val = cursor.into_inner();
+    assert_eq!(len, vec_rs_val.len() as u64);
+    assert_eq!(
+        PodDeserializer::deserialize_any_from(&vec_rs_val),
+        Ok((&[] as &[u8], struct_val))
+    );
+
+    let object_val = Value::Object(Object {
+        type_: 0,
+        id: 0,
+        properties: all_type_values
+            .iter()
+            .map(|value| Property {
+                flags: PropertyFlags::empty(),
+                key: 0,
+                value: value.clone(),
+            })
+            .collect(),
+    });
+    let (cursor, len) = PodSerializer::serialize(Cursor::new(Vec::new()), &object_val).unwrap();
+    let vec_rs_val = cursor.into_inner();
+    assert_eq!(len, vec_rs_val.len() as u64);
+    assert_eq!(
+        PodDeserializer::deserialize_any_from(&vec_rs_val),
+        Ok((&[] as &[u8], object_val))
+    );
+}
