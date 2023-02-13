@@ -367,19 +367,19 @@ impl<D> std::fmt::Debug for Stream<D> {
     }
 }
 
-type ParamChangedCB<D> = dyn Fn(u32, &mut D, *const spa_sys::spa_pod);
-type ProcessCB<D> = dyn Fn(&Stream<D>, &mut D);
+type ParamChangedCB<D> = dyn FnMut(u32, &mut D, *const spa_sys::spa_pod);
+type ProcessCB<D> = dyn FnMut(&Stream<D>, &mut D);
 
 pub struct ListenerLocalCallbacks<D> {
-    pub state_changed: Option<Box<dyn Fn(StreamState, StreamState)>>,
-    pub control_info: Option<Box<dyn Fn(u32, *const pw_sys::pw_stream_control)>>,
+    pub state_changed: Option<Box<dyn FnMut(StreamState, StreamState)>>,
+    pub control_info: Option<Box<dyn FnMut(u32, *const pw_sys::pw_stream_control)>>,
     #[allow(clippy::type_complexity)]
-    pub io_changed: Option<Box<dyn Fn(u32, *mut os::raw::c_void, u32)>>,
+    pub io_changed: Option<Box<dyn FnMut(u32, *mut os::raw::c_void, u32)>>,
     pub param_changed: Option<Box<ParamChangedCB<D>>>,
-    pub add_buffer: Option<Box<dyn Fn(*mut pw_sys::pw_buffer)>>,
-    pub remove_buffer: Option<Box<dyn Fn(*mut pw_sys::pw_buffer)>>,
+    pub add_buffer: Option<Box<dyn FnMut(*mut pw_sys::pw_buffer)>>,
+    pub remove_buffer: Option<Box<dyn FnMut(*mut pw_sys::pw_buffer)>>,
     pub process: Option<Box<ProcessCB<D>>>,
-    pub drained: Option<Box<dyn Fn()>>,
+    pub drained: Option<Box<dyn FnMut()>>,
     pub user_data: D,
     stream: Option<ptr::NonNull<pw_sys::pw_stream>>,
 }
@@ -414,8 +414,8 @@ impl<D> ListenerLocalCallbacks<D> {
             new: pw_sys::pw_stream_state,
             error: *const os::raw::c_char,
         ) {
-            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_ref() {
-                if let Some(ref cb) = state.state_changed {
+            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
+                if let Some(cb) = &mut state.state_changed {
                     let old = StreamState::from_raw(old, error);
                     let new = StreamState::from_raw(new, error);
                     cb(old, new)
@@ -428,8 +428,8 @@ impl<D> ListenerLocalCallbacks<D> {
             id: u32,
             control: *const pw_sys::pw_stream_control,
         ) {
-            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_ref() {
-                if let Some(ref cb) = state.control_info {
+            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
+                if let Some(cb) = &mut state.control_info {
                     cb(id, control);
                 }
             }
@@ -441,8 +441,8 @@ impl<D> ListenerLocalCallbacks<D> {
             area: *mut os::raw::c_void,
             size: u32,
         ) {
-            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_ref() {
-                if let Some(ref cb) = state.io_changed {
+            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
+                if let Some(cb) = &mut state.io_changed {
                     cb(id, area, size);
                 }
             }
@@ -454,7 +454,7 @@ impl<D> ListenerLocalCallbacks<D> {
             param: *const spa_sys::spa_pod,
         ) {
             if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
-                if let Some(ref cb) = state.param_changed {
+                if let Some(cb) = &mut state.param_changed {
                     cb(id, &mut state.user_data, param);
                 }
             }
@@ -464,8 +464,8 @@ impl<D> ListenerLocalCallbacks<D> {
             data: *mut ::std::os::raw::c_void,
             buffer: *mut pw_sys::pw_buffer,
         ) {
-            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_ref() {
-                if let Some(ref cb) = state.add_buffer {
+            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
+                if let Some(cb) = &mut state.add_buffer {
                     cb(buffer);
                 }
             }
@@ -475,8 +475,8 @@ impl<D> ListenerLocalCallbacks<D> {
             data: *mut ::std::os::raw::c_void,
             buffer: *mut pw_sys::pw_buffer,
         ) {
-            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_ref() {
-                if let Some(ref cb) = state.remove_buffer {
+            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
+                if let Some(cb) = &mut state.remove_buffer {
                     cb(buffer);
                 }
             }
@@ -484,7 +484,7 @@ impl<D> ListenerLocalCallbacks<D> {
 
         unsafe extern "C" fn on_process<D>(data: *mut ::std::os::raw::c_void) {
             if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
-                if let Some(ref cb) = state.process {
+                if let Some(cb) = &mut state.process {
                     let stream = state
                         .stream
                         .map(|ptr| Stream {
@@ -498,8 +498,8 @@ impl<D> ListenerLocalCallbacks<D> {
         }
 
         unsafe extern "C" fn on_drained<D>(data: *mut ::std::os::raw::c_void) {
-            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_ref() {
-                if let Some(ref cb) = state.drained {
+            if let Some(state) = (data as *mut ListenerLocalCallbacks<D>).as_mut() {
+                if let Some(cb) = &mut state.drained {
                     cb();
                 }
             }
@@ -547,7 +547,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `state_changed` event.
     fn state_changed<F>(mut self, callback: F) -> Self
     where
-        F: Fn(StreamState, StreamState) + 'static,
+        F: FnMut(StreamState, StreamState) + 'static,
     {
         self.callbacks().state_changed = Some(Box::new(callback));
         self
@@ -556,7 +556,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `control_info` event.
     fn control_info<F>(mut self, callback: F) -> Self
     where
-        F: Fn(u32, *const pw_sys::pw_stream_control) + 'static,
+        F: FnMut(u32, *const pw_sys::pw_stream_control) + 'static,
     {
         self.callbacks().control_info = Some(Box::new(callback));
         self
@@ -565,7 +565,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `io_changed` event.
     fn io_changed<F>(mut self, callback: F) -> Self
     where
-        F: Fn(u32, *mut os::raw::c_void, u32) + 'static,
+        F: FnMut(u32, *mut os::raw::c_void, u32) + 'static,
     {
         self.callbacks().io_changed = Some(Box::new(callback));
         self
@@ -574,7 +574,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `param_changed` event.
     fn param_changed<F>(mut self, callback: F) -> Self
     where
-        F: Fn(u32, &mut D, *const spa_sys::spa_pod) + 'static,
+        F: FnMut(u32, &mut D, *const spa_sys::spa_pod) + 'static,
     {
         self.callbacks().param_changed = Some(Box::new(callback));
         self
@@ -583,7 +583,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `add_buffer` event.
     fn add_buffer<F>(mut self, callback: F) -> Self
     where
-        F: Fn(*mut pw_sys::pw_buffer) + 'static,
+        F: FnMut(*mut pw_sys::pw_buffer) + 'static,
     {
         self.callbacks().add_buffer = Some(Box::new(callback));
         self
@@ -592,7 +592,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `remove_buffer` event.
     fn remove_buffer<F>(mut self, callback: F) -> Self
     where
-        F: Fn(*mut pw_sys::pw_buffer) + 'static,
+        F: FnMut(*mut pw_sys::pw_buffer) + 'static,
     {
         self.callbacks().remove_buffer = Some(Box::new(callback));
         self
@@ -601,7 +601,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `process` event.
     fn process<F>(mut self, callback: F) -> Self
     where
-        F: Fn(&Stream<D>, &mut D) + 'static,
+        F: FnMut(&Stream<D>, &mut D) + 'static,
     {
         self.callbacks().process = Some(Box::new(callback));
         self
@@ -610,7 +610,7 @@ pub trait ListenerBuilderT<D>: Sized {
     /// Set the callback for the `drained` event.
     fn drained<F>(mut self, callback: F) -> Self
     where
-        F: Fn() + 'static,
+        F: FnMut() + 'static,
     {
         self.callbacks().drained = Some(Box::new(callback));
         self
