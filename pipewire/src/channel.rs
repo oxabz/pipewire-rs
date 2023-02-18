@@ -141,12 +141,19 @@ where
     }
 }
 
-#[derive(Clone)]
 /// A `Sender` can be used to send messages to its associated [`Receiver`].
 ///
 /// It can be freely cloned, so you can send messages from multiple  places.
 pub struct Sender<T> {
     channel: Arc<Mutex<Channel<T>>>,
+}
+
+impl<T> Clone for Sender<T> {
+    fn clone(&self) -> Self {
+        Self {
+            channel: self.channel.clone(),
+        }
+    }
 }
 
 impl<T> Sender<T> {
