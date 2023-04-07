@@ -89,7 +89,7 @@ impl PortInfo {
 
     pub fn change_mask(&self) -> PortChangeMask {
         let mask = unsafe { self.ptr.as_ref().change_mask };
-        PortChangeMask::from_bits(mask).expect("invalid change_mask")
+        PortChangeMask::from_bits_retain(mask)
     }
 
     pub fn props(&self) -> Option<&ForeignDict> {
@@ -99,6 +99,7 @@ impl PortInfo {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct PortChangeMask: u64 {
         const PROPS = pw_sys::PW_PORT_CHANGE_MASK_PROPS as u64;
         const PARAMS = pw_sys::PW_PORT_CHANGE_MASK_PARAMS as u64;

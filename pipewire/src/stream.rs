@@ -720,6 +720,7 @@ impl<D> std::ops::Drop for StreamListener<D> {
 
 bitflags! {
     /// Extra flags that can be used in [`Stream::connect()`]
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct StreamFlags: pw_sys::pw_stream_flags {
         const AUTOCONNECT = pw_sys::pw_stream_flags_PW_STREAM_FLAG_AUTOCONNECT;
         const INACTIVE = pw_sys::pw_stream_flags_PW_STREAM_FLAG_INACTIVE;

@@ -188,7 +188,7 @@ impl LinkInfo {
 
     pub fn change_mask(&self) -> LinkChangeMask {
         let mask = unsafe { self.ptr.as_ref().change_mask };
-        LinkChangeMask::from_bits(mask).expect("Invalid raw change_mask")
+        LinkChangeMask::from_bits_retain(mask)
     }
 
     // TODO: format (requires SPA Pod support before it can be implemented)
@@ -199,6 +199,7 @@ impl LinkInfo {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct LinkChangeMask: u64 {
         const STATE = pw_sys::PW_LINK_CHANGE_MASK_STATE as u64;
         const FORMAT = pw_sys::PW_LINK_CHANGE_MASK_FORMAT as u64;

@@ -39,6 +39,7 @@ impl DataType {
 }
 
 bitflags::bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct DataFlags: u32 {
         /// Data is readable
         const READABLE = 1<<0;
@@ -46,7 +47,7 @@ bitflags::bitflags! {
         const WRITABLE = 1<<1;
         /// Data pointer can be changed
         const DYNAMIC = 1<<2;
-        const READWRITE = Self::READABLE.bits | Self::WRITABLE.bits;
+        const READWRITE = Self::READABLE.bits() | Self::WRITABLE.bits();
     }
 }
 
@@ -63,7 +64,7 @@ impl Data {
     }
 
     pub fn flags(&self) -> DataFlags {
-        DataFlags::from_bits_truncate(self.0.flags)
+        DataFlags::from_bits_retain(self.0.flags)
     }
 
     // FIXME: Add bindings for the fd field, but how to detect when it is not set / invalid?
@@ -112,6 +113,7 @@ impl Debug for Data {
 }
 
 bitflags::bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct ChunkFlags: i32 {
         /// Chunk data is corrupted in some way
         const CORRUPTED = 1<<0;
@@ -151,7 +153,7 @@ impl Chunk {
     }
 
     pub fn flags(&self) -> ChunkFlags {
-        ChunkFlags::from_bits_truncate(self.0.flags)
+        ChunkFlags::from_bits_retain(self.0.flags)
     }
 }
 

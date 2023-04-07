@@ -640,7 +640,7 @@ impl<'de> PodDeserializer<'de> {
         where
             E: CanonicalFixedSizedPod + FixedSizedPod + Copy,
         {
-            let flags = ChoiceFlags::from_bits(flags).expect("invalid choice flags");
+            let flags = ChoiceFlags::from_bits_retain(flags);
 
             match choice_type {
                 spa_sys::SPA_CHOICE_None => {
@@ -1051,7 +1051,7 @@ impl<'de> ObjectPodDeserializer<'de> {
             let key = deserializer.parse(u32(Endianness::Native))?;
             let flags = deserializer.parse(u32(Endianness::Native))?;
 
-            let flags = PropertyFlags::from_bits_truncate(flags);
+            let flags = PropertyFlags::from_bits_retain(flags);
             let (res, success) = P::deserialize(deserializer)?;
 
             // The amount of bytes deserialized is the length of the remaining input

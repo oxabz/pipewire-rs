@@ -67,7 +67,7 @@ pub trait ReadableDict {
 
     /// Returns the bitflags that are set for the dict.
     fn flags(&self) -> Flags {
-        Flags::from_bits_truncate(unsafe { (*self.get_dict_ptr()).flags })
+        Flags::from_bits_retain(unsafe { (*self.get_dict_ptr()).flags })
     }
 
     /// Get the value associated with the provided key.
@@ -262,6 +262,7 @@ impl fmt::Debug for ForeignDict {
 
 bitflags! {
     /// Dictionary flags
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct Flags: u32 {
         // These flags are redefinitions from
         // https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/spa/include/spa/utils/dict.h
@@ -452,7 +453,7 @@ mod tests {
     #[test]
     fn test_empty_dict() {
         let raw = spa_dict {
-            flags: Flags::empty().bits,
+            flags: Flags::empty().bits(),
             n_items: 0,
             items: ptr::null(),
         };
@@ -529,12 +530,12 @@ mod tests {
         };
 
         assert_eq!(
-            r#"StaticDict { flags: (empty), entries: {"K0": "V0"} }"#,
+            r#"StaticDict { flags: Flags(0x0), entries: {"K0": "V0"} }"#,
             &format!("{:?}", dict)
         );
 
         let raw = spa_dict {
-            flags: Flags::SORTED.bits,
+            flags: Flags::SORTED.bits(),
             n_items: 0,
             items: ptr::null(),
         };
@@ -542,7 +543,7 @@ mod tests {
         let dict = unsafe { ForeignDict::from_ptr(ptr::NonNull::from(&raw)) };
 
         assert_eq!(
-            r#"ForeignDict { flags: SORTED, entries: {} }"#,
+            r#"ForeignDict { flags: Flags(SORTED), entries: {} }"#,
             &format!("{:?}", dict)
         );
     }

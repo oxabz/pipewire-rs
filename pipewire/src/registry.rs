@@ -194,6 +194,7 @@ impl<'a> ListenerLocalBuilder<'a> {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct Permission: u32 {
         const R = pw_sys::PW_PERM_R;
         const W = pw_sys::PW_PERM_W;
@@ -220,7 +221,7 @@ impl GlobalObject<ForeignDict> {
         props: *const spa_sys::spa_dict,
     ) -> Self {
         let type_ = ObjectType::from_str(type_);
-        let permissions = Permission::from_bits(permissions).expect("invalid permissions");
+        let permissions = Permission::from_bits_retain(permissions);
         let props = props as *mut _;
         let props = ptr::NonNull::new(props).map(|ptr| unsafe { ForeignDict::from_ptr(ptr) });
 

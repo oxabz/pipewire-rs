@@ -382,7 +382,7 @@ impl Info {
 
     pub fn change_mask(&self) -> ChangeMask {
         let mask = unsafe { self.ptr.as_ref().change_mask };
-        ChangeMask::from_bits(mask).expect("invalid change_mask")
+        ChangeMask::from_bits_retain(mask)
     }
 
     pub fn props(&self) -> Option<&ForeignDict> {
@@ -406,6 +406,7 @@ impl fmt::Debug for Info {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct ChangeMask: u64 {
         const PROPS = pw_sys::PW_CORE_CHANGE_MASK_PROPS as u64;
     }

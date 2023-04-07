@@ -91,7 +91,7 @@ impl NodeInfo {
 
     pub fn change_mask(&self) -> NodeChangeMask {
         let mask = unsafe { self.ptr.as_ref().change_mask };
-        NodeChangeMask::from_bits(mask).expect("invalid change_mask")
+        NodeChangeMask::from_bits_retain(mask)
     }
 
     pub fn n_input_ports(&self) -> u32 {
@@ -127,6 +127,7 @@ impl NodeInfo {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct NodeChangeMask: u64 {
         const INPUT_PORTS = pw_sys::PW_NODE_CHANGE_MASK_INPUT_PORTS as u64;
         const OUTPUT_PORTS = pw_sys::PW_NODE_CHANGE_MASK_OUTPUT_PORTS as u64;

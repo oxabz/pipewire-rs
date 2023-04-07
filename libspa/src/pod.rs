@@ -716,6 +716,7 @@ pub struct Property {
 
 bitflags! {
     /// Property flags
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct PropertyFlags: u32 {
         // These flags are redefinitions from
         // https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/spa/include/spa/pod/pod.h
