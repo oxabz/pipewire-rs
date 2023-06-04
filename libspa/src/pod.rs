@@ -9,7 +9,6 @@
 
 pub mod deserialize;
 pub mod serialize;
-mod objects;
 mod id;
 
 use std::{
