@@ -37,12 +37,12 @@ use serialize::{PodSerialize, PodSerializer};
 
 use crate::utils::{Choice, Fd, Fraction, Id, Rectangle};
 
-use self::deserialize::{
+use self::{deserialize::{
     ChoiceDoubleVisitor, ChoiceFdVisitor, ChoiceFloatVisitor, ChoiceFractionVisitor,
     ChoiceIdVisitor, ChoiceIntVisitor, ChoiceLongVisitor, ChoiceRectangleVisitor, DoubleVisitor,
     FdVisitor, FloatVisitor, FractionVisitor, IdVisitor, IntVisitor, LongVisitor, PointerVisitor,
     RectangleVisitor,
-};
+}, id::IdEnum};
 
 /// Implementors of this trait are the canonical representation of a specific type of fixed sized SPA pod.
 ///
@@ -70,6 +70,8 @@ pub trait CanonicalFixedSizedPod: private::CanonicalFixedSizedPodSeal {
 }
 
 mod private {
+    use super::id::IdEnum;
+
     /// This trait makes [`super::CanonicalFixedSizedPod`] a "sealed trait", which makes it impossible to implement
     /// ouside of this crate.
     pub trait CanonicalFixedSizedPodSeal {}
@@ -83,6 +85,7 @@ mod private {
     impl CanonicalFixedSizedPodSeal for super::Fraction {}
     impl CanonicalFixedSizedPodSeal for super::Id {}
     impl CanonicalFixedSizedPodSeal for super::Fd {}
+    impl <T:IdEnum>CanonicalFixedSizedPodSeal for T {}
 }
 
 impl<T: CanonicalFixedSizedPod + Copy> FixedSizedPod for T {
@@ -252,6 +255,24 @@ impl CanonicalFixedSizedPod for Id {
         Self: Sized,
     {
         map(u32(Endianness::Native), Id)(input)
+    }
+}
+
+impl <T:IdEnum>CanonicalFixedSizedPod for T {
+    const TYPE: u32 = spa_sys::SPA_TYPE_Id;
+    const SIZE: u32 = 4;
+
+    fn serialize_body<O: Write>(&self, out: O) -> Result<O, GenError> {
+        let id = (*self).into();
+        gen_simple(ne_u32(id.0), out)
+    }
+
+    fn deserialize_body(input: &[u8]) -> IResult<&[u8], Self>
+    where
+        Self: Sized,
+    {
+        let res = map(u32(Endianness::Native), Id)(input)?;
+        Ok((res.0, res.1.into()))
     }
 }
 

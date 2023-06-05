@@ -20,15 +20,15 @@ impl syn::parse::Parse for MacroArgs{
 }
 
 lazy_static::lazy_static!{
-    static ref ID_CONSTANTS : HashSet<String> = {
+    static ref ID_CONSTANTS : HashSet<(String,String)> = {
         let mut constants = HashSet::new();
     
         let file: syn::File = syn::parse_file(include_str!("bindings.rs")).unwrap();
         
         for item in file.items{
-            if let Item::Const(ItemConst{ident, ..}) = item{
+            if let Item::Const(ItemConst{ident, expr, ..}) = item{
                 // TODO: Add type check to make sure its an int
-                constants.insert(ident.to_string());
+                constants.insert((ident.to_string(), expr.to_token_stream().to_string()));
             }
         }
 
@@ -48,39 +48,48 @@ pub(crate) fn enum_from_sys_(args: MacroArgs)->TokenStream{
         return syn::Error::new(Span::call_site().into(), &format!("Invalid regex : {reg}")).to_compile_error().into();
     };
 
-    let it = ID_CONSTANTS.iter()
-        .filter_map(|c|Some((c, reg.captures(c)?)))
-        .filter_map(|(c, matc)|{
+    let mut values = HashSet::new();
+    let constant = ID_CONSTANTS.iter()
+        .filter_map(|(c_id, c_val)|Some((c_id, c_val, reg.captures(c_id)?)))
+        .filter_map(|(c, c_val, matc)|{
             let id_ident = syn::Ident::new(c, Span::call_site().into());
             let mut item_ident = matc.get(1)?.as_str().to_string();
             item_ident[0..1].make_ascii_uppercase();
             let item_ident = syn::Ident::new(&item_ident, Span::call_site().into());
 
-            Some((id_ident, item_ident))
-        });
+            Some((c_val, (id_ident, item_ident)))
+        })
+        .filter_map(|(val,res)|{
+            if values.contains(val){
+                return None;
+            }
+            values.insert(val.to_string());
+            Some(res)
+        })
+        .collect::<Vec<_>>();
 
     
-    let uses = it.clone().map(|(id_ident, _)|{
+    let uses = constant.iter().map(|(id_ident, _)|{
         quote::quote!(
             #id_ident,
         )
     });
 
-    let variants = it.clone().map(|(id_ident, item_ident)|{
+    let variants = constant.iter().map(|(id_ident, item_ident)|{
         quote::quote!(
             #item_ident = #id_ident as isize,
         )
     });
 
-    let from_u32_matches = it.clone().map(|(id_ident, item_ident)|{
+    let from_u32_matches = constant.iter().map(|(id_ident, item_ident)|{
         quote::quote!(
-            #id_ident => Self::#item_ident,
+            #id_ident => #ident::#item_ident,
         )
     });
 
-    let into_u32_matches = it.map(|(id_ident, item_ident)|{
+    let into_u32_matches = constant.iter().map(|(id_ident, item_ident)|{
         quote::quote!(
-            Self::#item_ident => #id_ident,
+            #ident::#item_ident => #id_ident,
         )
     });
     
@@ -135,17 +144,7 @@ pub(crate) fn enum_from_sys_(args: MacroArgs)->TokenStream{
                 }
             }
 
-            impl FixedSizedPod for #ident {
-                type CanonicalType = Id;
-            
-                fn as_canonical_type(&self) -> Self::CanonicalType {
-                    (*self).into()
-                }
-            
-                fn from_canonical_type(id: &Self::CanonicalType) -> Self {
-                    From::from(id)
-                }
-            }
+            impl super::IdEnum for #ident {}
         }
 
         pub use #mod_ident::#ident;
