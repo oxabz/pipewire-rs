@@ -88,11 +88,14 @@ pub(crate) fn enum_from_sys_(args: MacroArgs)->TokenStream{
 
     quote::quote!(
         mod #mod_ident{
-            use spa_sys::{
+            use crate::utils::Id;
+            use crate::pod::{FixedSizedPod, PodSerialize, serialize};
+            use spa_sys::{ 
                 #(#uses)*
             };
 
-
+            #[repr(isize)]
+            #[derive(Debug, Copy, Clone, Eq, PartialEq)]
             pub enum #ident{
                 #(#variants)*
             }
@@ -106,7 +109,6 @@ pub(crate) fn enum_from_sys_(args: MacroArgs)->TokenStream{
                 }
             }
 
-            
             impl Into<u32> for #ident {
                 fn into(self) -> u32 {
                     match self {
@@ -115,6 +117,35 @@ pub(crate) fn enum_from_sys_(args: MacroArgs)->TokenStream{
                 }
             }
 
+            impl Into<Id> for #ident {
+                fn into(self) -> Id {
+                    Id(self.into())
+                }
+            }
+
+            impl From<Id> for #ident {
+                fn from(value: Id) -> Self {
+                    Self::from(value.0)
+                }
+            }
+
+            impl From<&Id> for #ident {
+                fn from(value: &Id) -> Self {
+                    Self::from(value.0)
+                }
+            }
+
+            impl FixedSizedPod for #ident {
+                type CanonicalType = Id;
+            
+                fn as_canonical_type(&self) -> Self::CanonicalType {
+                    (*self).into()
+                }
+            
+                fn from_canonical_type(id: &Self::CanonicalType) -> Self {
+                    From::from(id)
+                }
+            }
         }
 
         pub use #mod_ident::#ident;
